@@ -1,0 +1,8 @@
+name: Solar
+version: '0.1-PREDEV'
+prefix: "Solar"
+author: blueshipbdse
+description: "A plugin for managing world time."
+api-version: '1.21.4'
+main: org.blueship.solar.Main
+bootstrapper: org.blueship.solar.Bootstrapper
