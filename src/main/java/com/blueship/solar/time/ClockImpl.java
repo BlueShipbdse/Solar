@@ -32,7 +32,7 @@ final class ClockImpl implements Clock {
         if (!timePoints.isEmpty()) {
             this.totalCycleTime = lastTimePoint;
         } else {
-            Solar.getSolar().getSLF4JLogger().warn("Failed to initialize clock for schedule {}. Running default cycle of 24000 ticks.", schedule.name());
+            Solar.getHandler().getLogger().warn("Failed to initialize clock for schedule {}. Running default cycle of 24000 ticks.", schedule.name());
             Cycle defaultCycle = Cycle.DEFAULT;
             this.totalCycleTime = DAYLIGHT_CYCLE;
             timePoints = List.of(new TimePoint(defaultCycle, 0, DAYLIGHT_CYCLE));
@@ -59,7 +59,7 @@ final class ClockImpl implements Clock {
         while (currentCycleTime >= currentTime.endTime || currentCycleTime < currentTime.startTime) {
             currentTime = futureTime.next();
             if (++checks > maxChecks) {
-                Solar.getSolar().getSLF4JLogger().warn("Too many advances occurred for schedule {}!", schedule.name());
+                Solar.getHandler().getLogger().warn("Too many advances occurred for schedule {}!", schedule.name());
                 return;
             }
         }

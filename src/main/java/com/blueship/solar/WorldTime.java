@@ -17,7 +17,7 @@ public class WorldTime {
     private long time;
     private boolean ticking;
 
-    public WorldTime(@NotNull World world, @NotNull Schedule schedule) {
+    WorldTime(@NotNull World world, @NotNull Schedule schedule) {
         this.world = world;
         this.wasTimeStopped = world.isFixedTime();
         this.ticking = !wasTimeStopped;
@@ -34,7 +34,7 @@ public class WorldTime {
         updateWorldTime();
     }
 
-    void addTime(long time) {
+    public void addTime(long time) {
         this.time += time;
         clock.setTime(this.time);
         updateWorldTime();

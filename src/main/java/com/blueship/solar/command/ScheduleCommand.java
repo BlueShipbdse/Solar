@@ -17,14 +17,14 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static com.blueship.solar.command.Pages.createFillerText;
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
@@ -45,7 +45,7 @@ public final class ScheduleCommand implements Command {
                                        if (name.length() > 16) {
                                            throw NAME_TOO_LONG.create();
                                        }
-                                       Solar.getSolar().createSchedule(name);
+                                       Solar.getHandler().createSchedule(name);
                                        ctx.getSource().getSender().sendMessage("Created schedule " + name + ".");
                                        return SINGLE_SUCCESS;
                                    })
@@ -54,12 +54,12 @@ public final class ScheduleCommand implements Command {
                        .then(Commands.literal("remove")
                              .then(Commands.argument("schedule", StringArgumentType.word())
                                    .suggests((ctx, builder) -> {
-                                       Solar.getSolar().getScheduleNames().forEach(builder::suggest);
+                                       Solar.getHandler().getScheduleNames().forEach(builder::suggest);
                                        return builder.buildFuture();
                                    })
                                    .executes(ctx -> {
                                        String name = ctx.getArgument("schedule", String.class);
-                                       if (Solar.getSolar().removeSchedule(name)) {
+                                       if (Solar.getHandler().removeSchedule(name)) {
                                            return SINGLE_SUCCESS;
                                        } else {
                                            throw INVALID_SCHEDULE_NAME.create(name);
@@ -81,7 +81,7 @@ public final class ScheduleCommand implements Command {
                                                           })
                                                           .then(Commands.argument("index", IntegerArgumentType.integer(0))
                                                                 .executes(ctx -> {
-                                                                    var cycle = new Cycle(ctx.getArgument("name", String.class), ctx.getArgument("time", int.class));
+                                                                    var cycle = new Cycle(ctx.getArgument("name", String.class), ctx.getArgument("time", long.class));
                                                                     var schedule = ctx.getArgument("schedule", Schedule.class);
                                                                     int index = ctx.getArgument("index", int.class);
                                                                     int cycleSize = schedule.cycles().size();
@@ -136,22 +136,43 @@ public final class ScheduleCommand implements Command {
     }
 
     public static final int SCHEDULES_PER_PAGE = 9;
-    public static final int SCHEDULE_NAME_LENGTH = 58;
+    public static final int SCHEDULE_NAME_LENGTH = 50;
     public static final @NotNull Component TOP_TEXT_COMPONENT = Component.text("/")
                                                                           .append(createFillerText(" Schedules ", SCHEDULE_NAME_LENGTH))
                                                                           .append(Component.text("\\"))
                                                                           .appendNewline();
 
+    private static @NotNull TextComponent createScheduleHoverText(@NotNull Schedule schedule) {
+        var builder = Component.text();
+        builder.append(Component.text("Name: ", NamedTextColor.AQUA)).append(Component.text(schedule.name())).appendNewline();
+        builder.append(Component.text("Cycles: ", NamedTextColor.AQUA));
+        var cycles = schedule.cycles();
+        if (cycles.isEmpty()) {
+            builder.append(Component.text("NONE"));
+        } else {
+            builder.appendNewline();
+            for (var cycleIter = cycles.iterator(); cycleIter.hasNext();) {
+                var cycle = cycleIter.next();
+                builder.append(Component.text(" - ")).append(Component.text(cycle.name())).append(Component.text(" : ")).append(Component.text(cycle.cycleTime()));
+                if (cycleIter.hasNext()) {
+                    builder.appendNewline();
+                }
+            }
+        }
+        return builder.build();
+    }
+
     static @NotNull Component createScheduleListPage(int currentPage, @NotNull BiFunction<Schedule, TextComponent, TextComponent> componentConsumer) {
-        var schedules = Solar.getSolar().getSchedules();
+        var schedules = Solar.getHandler().getSchedules();
         return createScheduleListPage(Pages.createPageMap(schedules, SCHEDULES_PER_PAGE), currentPage, componentConsumer);
     }
 
     static @NotNull Component createScheduleListPage(@NotNull Int2ObjectMap<List<Schedule>> pages, int currentPage, @NotNull BiFunction<Schedule, TextComponent, TextComponent> componentConsumer) {
         return Pages.createPage(
                 pages, currentPage, SCHEDULES_PER_PAGE, TOP_TEXT_COMPONENT, schedule -> List.of(
-                        componentConsumer.apply(schedule, Component.text(StringUtil.centerJustify(schedule.name(), SCHEDULE_NAME_LENGTH)).hoverEvent(HoverEvent.showText(Component.text(schedule.cycles().toString()))))
-                )
+                        componentConsumer.apply(schedule, Component.text(StringUtil.centerJustify(schedule.name(), SCHEDULE_NAME_LENGTH)).hoverEvent(HoverEvent.showText(createScheduleHoverText(schedule))))
+                ),
+                true
         );
     }
 }

@@ -10,6 +10,7 @@ public final class Cycle {
     public static final Cycle DEFAULT = new Cycle("Default", Constants.DAYLIGHT_CYCLE);
 
     private final @NotNull String name;
+    private final @Positive int days = 1;
     private final @Positive long cycleTime;
     private final @Positive float timePerTick;
 

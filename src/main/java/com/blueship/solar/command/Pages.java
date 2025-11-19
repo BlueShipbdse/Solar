@@ -6,11 +6,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
-import org.bukkit.map.MinecraftFont;
 import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,48 +29,55 @@ public final class Pages {
 
     public static <T> @NotNull Component createPage(@NotNull Collection<T> entries, @Positive int currentPage, @Positive int pageLength,
                                                     @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowTextCreator) {
-        return createPage(createPageMap(entries, pageLength), currentPage, pageLength, topText, rowTextCreator);
+        return createPage(createPageMap(entries, pageLength), currentPage, pageLength, topText, rowTextCreator, false);
     }
 
     public static <T> @NotNull Component createPage(@NotNull Collection<T> entries, @Positive int currentPage, @Positive int pageLength,
                                                     @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowTextCreator,
                                                     @NotNull Function<Component, Component> prevPageEffect,
                                                     @NotNull Function<Component, Component> nextPageEffect) {
-        return createPage(createPageMap(entries, pageLength), currentPage, pageLength, topText, rowTextCreator, prevPageEffect, nextPageEffect);
+        return createPage(createPageMap(entries, pageLength), currentPage, pageLength, topText, rowTextCreator, false, prevPageEffect, nextPageEffect);
     }
 
     public static <T> @NotNull Component createPage(@NotNull Int2ObjectMap<List<T>> pages, @Positive int currentPage, @Positive int pageLength,
-                                                    @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowTextCreator) {
+                                                    @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowTextCreator, boolean numberEntries) {
         return createPage(
                 pages,
                 currentPage,
                 pageLength,
                 topText,
                 rowTextCreator,
+                numberEntries,
                 prevPage -> prevPage.clickEvent(ClickEvent.callback(audience -> audience.sendMessage(createPage(
                         pages,
                         currentPage - 1,
                         pageLength,
                         topText,
-                        rowTextCreator
+                        rowTextCreator,
+                        numberEntries
                 )))),
                 nextPage -> nextPage.clickEvent(ClickEvent.callback(audience -> audience.sendMessage(createPage(
                         pages,
                         currentPage + 1,
                         pageLength,
                         topText,
-                        rowTextCreator
+                        rowTextCreator,
+                        numberEntries
                 ))))
         );
     }
 
     public static <T> @NotNull Component createPage(@NotNull Int2ObjectMap<List<T>> pages, @Positive int currentPage, @Positive int pageLength,
                                                     @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowText,
-                                                    @NotNull Function<Component, Component> prevPageEffect,
+                                                    boolean numberEntries, @NotNull Function<Component, Component> prevPageEffect,
                                                     @NotNull Function<Component, Component> nextPageEffect) {
         var middleComponent = Component.empty().toBuilder();
+        int currentEntry = 1;
         for (var entry : pages.get(currentPage)) {
             var rowComponent = SIDE_SEPERATOR_COMPONENT.toBuilder();
+            if (numberEntries) {
+                rowComponent.append(Component.text(currentEntry + ". "));
+            }
             var columns = rowText.apply(entry);
             for (var rowPartIter = columns.iterator(); rowPartIter.hasNext(); ) {
                 var component = rowPartIter.next();
@@ -81,7 +86,9 @@ public final class Pages {
                     rowComponent.append(SEPERATOR_COMPONENT);
                 }
             }
-            middleComponent.append(rowComponent).append(SIDE_SEPERATOR_COMPONENT).appendNewline();
+            middleComponent.append(rowComponent).append(SIDE_SEPERATOR_COMPONENT).appendNewline();middleComponent.append(rowComponent).append(SIDE_SEPERATOR_COMPONENT).appendNewline();
+
+            ++currentEntry;
         }
 
         return topText.append(middleComponent).append(Pages.createPageBottomText(pages, currentPage, pageLength, prevPageEffect, nextPageEffect));

@@ -24,7 +24,7 @@ public class ScheduleArgumentType implements CustomArgumentType.Converted<Schedu
 
     @Override
     public Schedule convert(String nativeType) throws CommandSyntaxException {
-        return Solar.getSolar().getSchedule(nativeType).orElseThrow(() -> new SimpleCommandExceptionType(MessageComponentSerializer.message().serialize(Component.text(nativeType + " is not a valid schedule."))).create());
+        return Solar.getHandler().getSchedule(nativeType).orElseThrow(() -> new SimpleCommandExceptionType(MessageComponentSerializer.message().serialize(Component.text(nativeType + " is not a valid schedule."))).create());
     }
 
     @Override
@@ -34,7 +34,7 @@ public class ScheduleArgumentType implements CustomArgumentType.Converted<Schedu
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        Solar.getSolar().getScheduleNames().forEach(builder::suggest);
+        Solar.getHandler().getScheduleNames().forEach(builder::suggest);
         return builder.buildFuture();
     }
 }

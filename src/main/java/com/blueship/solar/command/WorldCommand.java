@@ -10,7 +10,6 @@ import com.blueship.solar.util.StringUtil;
 import com.blueship.solar.util.TimeUtil;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.CommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -50,8 +49,8 @@ public final class WorldCommand implements Command {
                                    .then(Commands.literal("schedule")
                                          .then(Commands.argument("Schedule", ScheduleArgumentType.schedule())
                                                .executes(ctx -> {
-                                                   WorldTime world = ctx.getArgument("World", WorldTime.class);
-                                                   Schedule schedule = ctx.getArgument("Schedule", Schedule.class);
+                                                   var world = ctx.getArgument("World", WorldTime.class);
+                                                   var schedule = ctx.getArgument("Schedule", Schedule.class);
                                                    world.setSchedule(schedule);
                                                    ctx.getSource().getSender().sendMessage("Set the schedule of world " + world.getWorld().getName() + " to " + schedule.name() + ".");
                                                    return SINGLE_SUCCESS;
@@ -61,19 +60,51 @@ public final class WorldCommand implements Command {
                                    .then(Commands.literal("ticking")
                                          .then(Commands.argument("true/false", BoolArgumentType.bool())
                                                .executes(ctx -> {
-                                                   WorldTime world = ctx.getArgument("World", WorldTime.class);
+                                                   var world = ctx.getArgument("World", WorldTime.class);
                                                    boolean isTicking = ctx.getArgument("true/false", boolean.class);
                                                    world.setTicking(isTicking);
-                                                   ctx.getSource().getSender().sendMessage(Component.text(world.getWorld().getName() + " is " + (isTicking ? " now " : " no longer " ) + "ticking."));
+                                                   ctx.getSource().getSender().sendMessage(Component.text(
+                                                           world.getWorld().getName() + " is " + (isTicking ? " now " : " no longer " ) + "ticking.")
+                                                   );
                                                    return SINGLE_SUCCESS;
                                                })
                                          )
                                    )
                              )
+                             .then(Commands.literal("time")
+                                   .executes(ctx -> {
+                                       var world = ctx.getArgument("World", WorldTime.class);
+                                       ctx.getSource().getSender().sendMessage(Component.text(
+                                               "The current time for " + world.getWorld().getName() + " is " + getWorldTime(world) + "."
+                                       ));
+                                       return SINGLE_SUCCESS;
+                                   })
+                             )
+                             .then(Commands.literal("cycle")
+                                   .executes(ctx -> {
+                                       var worldTime = ctx.getArgument("World", WorldTime.class);
+                                       var cycle = worldTime.getCurrentCycle();
+                                       ctx.getSource().getSender().sendMessage(Component.text(
+                                               "Current Cycle for " + worldTime.getWorld().getName() + "\n" + cycle +
+                                                       "Progress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100))) + "\n"
+                                           )
+                                       );
+                                       return SINGLE_SUCCESS;
+                                   })
+                             )
                        )
                        .build();
     }
 
+
+    private static @NotNull String getWorldTime(@NotNull WorldTime world) {
+        boolean displayUsingTicks = Solar.getHandler().getConfig().getBoolean("displayTimeAsTicks", true);
+        if (displayUsingTicks) {
+            return String.valueOf(world.getTime());
+        } else {
+            return TimeUtil.getTimeInHHMM(world.getTime());
+        }
+    }
 
     private static final @NotNull TextComponent ACTIVE_TIME_COMPONENT = Component.text("  (")
                                                                                  .append(Component.text("ACTIVE", NamedTextColor.GREEN))
@@ -95,7 +126,7 @@ public final class WorldCommand implements Command {
                                                                           .appendNewline();
 
     private static @NotNull Component createWorldPage(int currentPage) {
-        var pages = Pages.createPageMap(Solar.getSolar().getWorlds(), WORLDS_PER_PAGE);
+        var pages = Pages.createPageMap(Solar.getHandler().getWorlds(), WORLDS_PER_PAGE);
         return createWorldPage(pages, currentPage);
     }
 
@@ -129,7 +160,7 @@ public final class WorldCommand implements Command {
                         audience.sendMessage(ScheduleCommand.createScheduleListPage(
                                 currentPage,
                                 (sched, textComp) -> textComp.clickEvent(ClickEvent.callback(audience2 -> {
-                                    Solar.getSolar().getSLF4JLogger().info("{} set {}'s schedule to {}", AudienceUtil.getName(audience2), worldName, sched.name());
+                                    Solar.getHandler().getLogger().info("{} set {}'s schedule to {}", AudienceUtil.getName(audience2), worldName, sched.name());
                                     worldTime.setSchedule(sched);
                                     audience2.sendMessage(createWorldPage(pages, currentPage));
                                 }))
@@ -137,16 +168,16 @@ public final class WorldCommand implements Command {
                     }));
 
                     return List.of(cycleComponent, worldComponent, scheduleComponent);
-                }
+                },
+                false
         );
     }
 
     private static @NotNull Component createWorldTimeDescription(@NotNull WorldTime worldTime) {
         return Component.text("Name: " + worldTime.getWorld().getName())
        .append(Component.text("Day: " + TimeUtil.toDays(worldTime.getTime())).appendNewline())
-       .append(Component.text("Time: " + TimeUtil.getTimeInHHMM(worldTime.getTime())).appendNewline())
+       .append(Component.text("Time: " + getWorldTime(worldTime)).appendNewline())
        .append(Component.text(worldTime.getCurrentCycle().toString())).appendNewline()
        .append(Component.text("Progress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100)))));
-
     }
 }
