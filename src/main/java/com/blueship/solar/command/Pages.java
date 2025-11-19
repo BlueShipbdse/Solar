@@ -95,7 +95,7 @@ public final class Pages {
         for (T obj : source) {
             objectList.add(obj);
             if (++index >= entriesPerPage) {
-                objectMap.put(currentPage, objectList);
+                objectMap.put(currentPage++, objectList);
                 objectList = new ArrayList<>();
                 index = 0;
             }
