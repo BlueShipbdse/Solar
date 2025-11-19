@@ -1,5 +1,5 @@
 name: Solar
-version: 'ALPHA-1.0'
+version: '1.0-ALPHA'
 prefix: "Solar"
 author: blueshipbdse
 description: "A plugin for managing world time."
