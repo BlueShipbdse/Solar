@@ -134,7 +134,7 @@ public final class Solar extends JavaPlugin implements Listener {
         }
 
         for (World world : Bukkit.getWorlds()) {
-            worlds.putIfAbsent(world.key().value(), new WorldTime(world, Schedule.DEFAULT));
+            worlds.putIfAbsent(world.getName(), new WorldTime(world, Schedule.DEFAULT));
         }
     }
 
@@ -213,7 +213,7 @@ public final class Solar extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onTimeSkip(@NotNull TimeSkipEvent event) {
         if (event.getSkipReason() == TimeSkipEvent.SkipReason.CUSTOM) return;
-        var worldTime = worlds.get(event.getWorld().key().value());
+        var worldTime = worlds.get(event.getWorld().getName());
         if (worldTime != null) {
             event.setCancelled(true);
             worldTime.addTime(event.getSkipAmount());
@@ -222,7 +222,7 @@ public final class Solar extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldLoad(@NotNull WorldLoadEvent event) {
-        var worldTime = worlds.get(event.getWorld().key().value());
+        var worldTime = worlds.get(event.getWorld().getName());
         if (worldTime != null) {
             worldTime.setTicking(!worldTime.wasTimeStopped());
         }
@@ -230,7 +230,7 @@ public final class Solar extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldUnload(@NotNull WorldUnloadEvent event) {
-        var worldTime = worlds.get(event.getWorld().key().value());
+        var worldTime = worlds.get(event.getWorld().getName());
         if (worldTime != null) {
             worldTime.setTicking(false);
         }
@@ -239,7 +239,7 @@ public final class Solar extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onWorldGameRuleChange(@NotNull WorldGameRuleChangeEvent event) {
         if (event.getGameRule() == GameRule.DO_DAYLIGHT_CYCLE && !event.isCancelled()) {
-            var worldTime = worlds.get(event.getWorld().key().value());
+            var worldTime = worlds.get(event.getWorld().getName());
             if (worldTime != null) {
                 event.setCancelled(true);
                 worldTime.setTicking(Boolean.parseBoolean(event.getValue()));
