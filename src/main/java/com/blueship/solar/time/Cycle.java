@@ -33,7 +33,7 @@ public final class Cycle {
 
     @Override
     public @NotNull String toString() {
-        return "Name: " + name + "\nTime: " + cycleTime + "\n";
+        return "Name: " + name + "\nTime: " + cycleTime;
     }
 
     @Override

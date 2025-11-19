@@ -20,7 +20,6 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +33,7 @@ public final class Solar extends JavaPlugin implements Listener {
         return solar;
     }
     private final @NotNull Map<String, Schedule> schedules = new LinkedHashMap<>();
-    private final @NotNull Map<Key, WorldTime> worlds = new LinkedHashMap<>();
+    private final @NotNull Map<String, WorldTime> worlds = new LinkedHashMap<>();
     private @Nullable BukkitTask tickTask;
 
     public void createSchedule(@NotNull String name) {
@@ -129,11 +128,11 @@ public final class Solar extends JavaPlugin implements Listener {
                 continue;
             }
 
-            worlds.put(Key.key(worldName), new WorldTime(world, schedule));
+            worlds.put(worldName, new WorldTime(world, schedule));
         }
 
         for (World world : Bukkit.getWorlds()) {
-            worlds.putIfAbsent(world.key(), new WorldTime(world, Schedule.DEFAULT));
+            worlds.putIfAbsent(world.key().value(), new WorldTime(world, Schedule.DEFAULT));
         }
     }
 
