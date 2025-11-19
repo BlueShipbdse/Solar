@@ -3,8 +3,8 @@ plugins {
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
-group = 'org.blueship'
-version = '0.1-PREDEV'
+group = 'com.blueship'
+version = 'ALPHA-1.0'
 
 repositories {
     mavenCentral()
@@ -16,6 +16,8 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    testImplementation(platform("org.junit:junit-bom:5.11.4"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 tasks {
@@ -43,6 +45,10 @@ tasks.withType(JavaCompile).configureEach {
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
         options.release.set(targetJavaVersion)
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 processResources {

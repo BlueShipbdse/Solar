@@ -1,0 +1,138 @@
+package com.blueship.solar.command;
+
+import com.blueship.solar.Solar;
+import com.blueship.solar.WorldTime;
+import com.blueship.solar.command.arguments.ScheduleArgumentType;
+import com.blueship.solar.command.arguments.WorldTimeArgumentType;
+import com.blueship.solar.time.Schedule;
+import com.blueship.solar.util.AudienceUtil;
+import com.blueship.solar.util.StringUtil;
+import com.blueship.solar.util.TimeUtil;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.tree.CommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+
+import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
+
+public final class WorldCommand implements Command {
+    private static final int WORLDS_PER_PAGE = 9;
+
+    @SuppressWarnings("UnstableApiUsage")
+    @Override
+    public CommandNode<CommandSourceStack> get() {
+        return Commands.literal("world")
+                       .then(Commands.literal("list")
+                             .executes(ctx -> {
+                                 ctx.getSource().getSender().sendMessage(createWorldPage(1));
+                                 return SINGLE_SUCCESS;
+                             })
+                             .then(Commands.argument("pages", IntegerArgumentType.integer())
+                                   .executes(ctx -> {
+                                       ctx.getSource().getSender().sendMessage(createWorldPage(IntegerArgumentType.getInteger(ctx, "pages")));
+                                       return SINGLE_SUCCESS;
+                                   })
+                             )
+                       )
+                       .then(Commands.argument("World", WorldTimeArgumentType.worldTime())
+                             .then(Commands.literal("set")
+                                   .then(Commands.literal("schedule")
+                                         .then(Commands.argument("Schedule", ScheduleArgumentType.schedule())
+                                               .executes(ctx -> {
+                                                   WorldTime world = ctx.getArgument("World", WorldTime.class);
+                                                   Schedule schedule = ctx.getArgument("Schedule", Schedule.class);
+                                                   world.setSchedule(schedule);
+                                                   ctx.getSource().getSender().sendMessage("Set the schedule of world " + world.getWorld().getName() + " to " + schedule.name() + ".");
+                                                   return SINGLE_SUCCESS;
+                                               })
+                                         )
+                                   )
+                             )
+                       )
+                       .build();
+    }
+
+
+    private static final @NotNull TextComponent ACTIVE_TIME_COMPONENT = Component.text("  (")
+                                                                                 .append(Component.text("ACTIVE", NamedTextColor.GREEN))
+                                                                                 .append(Component.text(").  "));
+    private static final @NotNull TextComponent INACTIVE_TIME_COMPONENT = Component.text(" (")
+                                                                                   .append(Component.text("INACTIVE", NamedTextColor.RED))
+                                                                                   .append(Component.text(") "));
+    private static final int CYCLES_STATUS_LENGTH = 64;
+    private static final int WORLD_NAME_LENGTH = 76;
+    private static final int SCHEDULE_NAME_LENGTH = 58;
+    private static final @NotNull Component TOP_TEXT_COMPONENT = Component.text("/")
+                                                                          // Cycles
+                                                                          .append(Pages.createFillerText(" Cycles ", CYCLES_STATUS_LENGTH))
+                                                                          // Worlds
+                                                                          .append(Pages.createFillerText(" Worlds ", WORLD_NAME_LENGTH))
+                                                                          // Schedule
+                                                                          .append(Pages.createFillerText(" Schedules ", SCHEDULE_NAME_LENGTH))
+                                                                          .append(Component.text("\\"))
+                                                                          .appendNewline();
+
+    private static @NotNull Component createWorldPage(int currentPage) {
+        var pages = Pages.createPageMap(Solar.getSolar().getWorlds(), WORLDS_PER_PAGE);
+        return createWorldPage(pages, currentPage);
+    }
+
+    private static @NotNull Component createWorldPage(@NotNull Int2ObjectMap<@NotNull List<WorldTime>> pages, int currentPage) {
+        return Pages.createPage(
+                pages, currentPage, WORLDS_PER_PAGE, TOP_TEXT_COMPONENT, worldTime -> {
+                    String worldName = worldTime.getWorld().getName();
+                    Schedule schedule = worldTime.getSchedule();
+                    Component cycleComponent;
+                    if (worldTime.isTicking()) {
+                        cycleComponent = ACTIVE_TIME_COMPONENT.hoverEvent(HoverEvent.showText(Component.text("Toggle ").append(Component.text(
+                                worldName)).append(INACTIVE_TIME_COMPONENT))).clickEvent(ClickEvent.callback(audience -> {
+                            worldTime.setTicking(false);
+                            audience.sendMessage(createWorldPage(pages, currentPage));
+                        }));
+                    } else {
+                        cycleComponent = INACTIVE_TIME_COMPONENT.hoverEvent(HoverEvent.showText(Component.text("Toggle ").append(Component.text(
+                                worldName)).append(ACTIVE_TIME_COMPONENT))).clickEvent(ClickEvent.callback(audience -> {
+                            worldTime.setTicking(true);
+                            audience.sendMessage(createWorldPage(pages, currentPage));
+                        }));
+                    }
+                    final TextComponent worldComponent = Component.text(StringUtil.centerJustify(
+                            worldName,
+                            WORLD_NAME_LENGTH
+                    )).hoverEvent(HoverEvent.showText(createWorldTimeDescription(worldTime)));
+                    final TextComponent scheduleComponent = Component.text(StringUtil.centerJustify(
+                            schedule.name(),
+                            SCHEDULE_NAME_LENGTH
+                    )).hoverEvent(HoverEvent.showText(Component.text("Change " + worldName + "'s Schedule"))).clickEvent(ClickEvent.callback(audience -> {
+                        audience.sendMessage(ScheduleCommand.createScheduleListPage(
+                                currentPage,
+                                (sched, textComp) -> textComp.clickEvent(ClickEvent.callback(audience2 -> {
+                                    Solar.getSolar().getSLF4JLogger().info("{} set {}'s schedule to {}", AudienceUtil.getName(audience2), worldName, sched.name());
+                                    worldTime.setSchedule(sched);
+                                    audience2.sendMessage(createWorldPage(pages, currentPage));
+                                }))
+                        ));
+                    }));
+
+                    return List.of(cycleComponent, worldComponent, scheduleComponent);
+                }
+        );
+    }
+
+    private static @NotNull Component createWorldTimeDescription(@NotNull WorldTime worldTime) {
+        return Component.text("Day: " + TimeUtil.toDays(worldTime.getTime())).appendNewline()
+       .append(Component.text("Time: " + TimeUtil.getTimeInHHMM(worldTime.getTime())).appendNewline())
+       .append(Component.text(worldTime.getCurrentCycle().toString())).appendNewline()
+       .append(Component.text("Progress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100)))));
+
+    }
+}
