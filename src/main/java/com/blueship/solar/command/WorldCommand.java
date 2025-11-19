@@ -59,15 +59,15 @@ public final class WorldCommand implements Command {
                                          )
                                    )
                                    .then(Commands.literal("ticking")
-                                                 .then(Commands.argument("true/false", BoolArgumentType.bool())
-                                                               .executes(ctx -> {
-                                                                   WorldTime world = ctx.getArgument("World", WorldTime.class);
-                                                                   boolean isTicking = ctx.getArgument("true/false", boolean.class);
-                                                                   world.setTicking(isTicking);
-                                                                   ctx.getSource().getSender().sendMessage(Component.text(world.getWorld().getName() + " is " + (isTicking ? " now " : " no longer " ) + "ticking."));
-                                                                   return SINGLE_SUCCESS;
-                                                               })
-                                                 )
+                                         .then(Commands.argument("true/false", BoolArgumentType.bool())
+                                               .executes(ctx -> {
+                                                   WorldTime world = ctx.getArgument("World", WorldTime.class);
+                                                   boolean isTicking = ctx.getArgument("true/false", boolean.class);
+                                                   world.setTicking(isTicking);
+                                                   ctx.getSource().getSender().sendMessage(Component.text(world.getWorld().getName() + " is " + (isTicking ? " now " : " no longer " ) + "ticking."));
+                                                   return SINGLE_SUCCESS;
+                                               })
+                                         )
                                    )
                              )
                        )
