@@ -86,7 +86,7 @@ public final class Solar extends JavaPlugin implements Listener {
             List<Cycle> cycleList = new ArrayList<>();
             var cycleSection = scheduleSection.getConfigurationSection("cycles");
             for (var cycleName : cycleSection.getKeys(false)) {
-                long time = scheduleSection.getLong(cycleName);
+                long time = cycleSection.getLong(cycleName);
                 if (time <= 0) {
                     getSLF4JLogger().warn(
                             "Failed to read schedules.yml. Cycle {} for defined Schedule {} is not valid! Time must be greater than 0.",
@@ -109,10 +109,12 @@ public final class Solar extends JavaPlugin implements Listener {
 
         for (String worldName : scheduleConfig.getKeys(false)) {
             var worldSection = scheduleConfig.getConfigurationSection(worldName);
+
             String scheduleName;
             if (worldSection.contains("schedule")) {
                 scheduleName = worldSection.getString("schedule");
             } else {
+                getSLF4JLogger().warn("Failed to read world-time.yml. For World {}, no schedule exists!", worldName);
                 continue;
             }
 
