@@ -67,7 +67,6 @@ public final class Solar extends JavaPlugin implements Listener {
 
     private void tick() {
         if (Bukkit.getOnlinePlayers().isEmpty()) return;
-
         synchronized (worlds) {
             worlds.forEach((k, worldTime) -> {
                 if (worldTime.getWorld().getLoadedChunks().length > 0) {

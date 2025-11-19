@@ -8,7 +8,9 @@ import com.blueship.solar.time.Schedule;
 import com.blueship.solar.util.AudienceUtil;
 import com.blueship.solar.util.StringUtil;
 import com.blueship.solar.util.TimeUtil;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.CommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -55,6 +57,17 @@ public final class WorldCommand implements Command {
                                                    return SINGLE_SUCCESS;
                                                })
                                          )
+                                   )
+                                   .then(Commands.literal("ticking")
+                                                 .then(Commands.argument("true/false", BoolArgumentType.bool())
+                                                               .executes(ctx -> {
+                                                                   WorldTime world = ctx.getArgument("World", WorldTime.class);
+                                                                   boolean isTicking = ctx.getArgument("true/false", boolean.class);
+                                                                   world.setTicking(isTicking);
+                                                                   ctx.getSource().getSender().sendMessage(Component.text(world.getWorld().getName() + " is " + (isTicking ? " now " : " no longer " ) + "ticking."));
+                                                                   return SINGLE_SUCCESS;
+                                                               })
+                                                 )
                                    )
                              )
                        )
@@ -129,7 +142,8 @@ public final class WorldCommand implements Command {
     }
 
     private static @NotNull Component createWorldTimeDescription(@NotNull WorldTime worldTime) {
-        return Component.text("Day: " + TimeUtil.toDays(worldTime.getTime())).appendNewline()
+        return Component.text("Name: " + worldTime.getWorld().getName())
+       .append(Component.text("Day: " + TimeUtil.toDays(worldTime.getTime())).appendNewline())
        .append(Component.text("Time: " + TimeUtil.getTimeInHHMM(worldTime.getTime())).appendNewline())
        .append(Component.text(worldTime.getCurrentCycle().toString())).appendNewline()
        .append(Component.text("Progress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100)))));
