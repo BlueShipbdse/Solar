@@ -117,16 +117,44 @@ public final class ScheduleCommand implements Command {
                              )
                        )
                        .then(Commands.literal("list")
-                                     .executes(ctx -> {
-                                         ctx.getSource().getSender().sendMessage(createScheduleListPage(1, (sched, textComp) -> textComp));
-                                         return SINGLE_SUCCESS;
-                                     })
-                                     .then(Commands.argument("pages", IntegerArgumentType.integer())
-                                                   .executes(ctx -> {
-                                                     ctx.getSource().getSender().sendMessage(createScheduleListPage(IntegerArgumentType.getInteger(ctx, "pages"), (sched, textComp) -> textComp));
-                                                     return SINGLE_SUCCESS;
-                                                   })
-                                     )
+                             .executes(ctx -> {
+                                 ctx.getSource().getSender().sendMessage(createScheduleListPage(1, (sched, textComp) -> textComp));
+                                 return SINGLE_SUCCESS;
+                             })
+                             .then(Commands.argument("pages", IntegerArgumentType.integer())
+                                   .executes(ctx -> {
+                                     ctx.getSource().getSender().sendMessage(createScheduleListPage(IntegerArgumentType.getInteger(ctx, "pages"), (sched, textComp) -> textComp));
+                                     return SINGLE_SUCCESS;
+                                   })
+                             )
+                       )
+                       .then(Commands.literal("show")
+                             .then(Commands.argument("schedule", ScheduleArgumentType.schedule())
+                                   .executes(ctx -> {
+                                       var schedule = ctx.getArgument("schedule", Schedule.class);
+                                       TextComponent.Builder message = Component.text("Showing Schedule " + schedule.name()).toBuilder().appendNewline();
+                                       var cycles = schedule.cycles();
+                                       if (!cycles.isEmpty()) {
+                                           int amount = 1;
+                                           for (var iter = cycles.iterator(); iter.hasNext(); ++amount) {
+                                               var cycle = iter.next();
+                                               message.append(Component.text(amount + ". ", NamedTextColor.AQUA));
+                                               message.append(Component.text(cycle.name()).hoverEvent(HoverEvent.showText(Component.text("Cycle Name"))));
+                                               message.append(Component.text(" : "));
+                                               message.append(Component.text(cycle.cycleTime()).hoverEvent(HoverEvent.showText(Component.text("# of Ticks per Day"))));
+                                               message.append(Component.text(" : "));
+                                               message.append(Component.text(cycle.days()).hoverEvent(HoverEvent.showText(Component.text("# of Days"))));
+                                               if (iter.hasNext()) {
+                                                   message.appendNewline();
+                                               }
+                                           }
+                                       } else {
+                                           message.append(Component.text("No Cycle Data Available"));
+                                       }
+                                       ctx.getSource().getSender().sendMessage(message);
+                                       return SINGLE_SUCCESS;
+                                   })
+                             )
                        )
                        .build();
     }
