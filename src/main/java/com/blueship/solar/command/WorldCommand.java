@@ -70,6 +70,10 @@ public final class WorldCommand implements Command {
                              )
                        )
                        .then(Commands.argument("World", WorldTimeArgumentType.worldTime())
+                             .executes(ctx -> {
+                                 ctx.getSource().getSender().sendMessage(createWorldTimeDescription(ctx.getArgument("World", WorldTime.class)));
+                                 return SINGLE_SUCCESS;
+                             })
                              .then(Commands.literal("set")
                                    .then(Commands.literal("schedule")
                                          .then(Commands.argument("Schedule", ScheduleArgumentType.schedule())

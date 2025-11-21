@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.blueship'
-version = '1.0-ALPHA'
+version = '1.0'
 
 repositories {
     mavenCentral()
