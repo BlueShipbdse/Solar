@@ -15,6 +15,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.tree.CommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -97,6 +98,16 @@ public final class WorldCommand implements Command {
                                                })
                                          )
                                    )
+                                   .then(Commands.literal("time")
+                                        .then(Commands.argument("Time", ArgumentTypes.time())
+                                              .executes(ctx -> {
+                                                  var worldTime = ctx.getArgument("World", WorldTime.class);
+                                                  var time = ctx.getArgument("Time", int.class);
+                                                  worldTime.setTime(time);
+                                                  return SINGLE_SUCCESS;
+                                              })
+                                        )
+                                   )
                              )
                              .then(Commands.literal("time")
                                    .executes(ctx -> {
@@ -106,6 +117,15 @@ public final class WorldCommand implements Command {
                                        ));
                                        return SINGLE_SUCCESS;
                                    })
+                                           .then(Commands.argument("true/false (See as Ticks?)", BoolArgumentType.bool())
+                                                         .executes(ctx -> {
+                                                             var world = ctx.getArgument("World", WorldTime.class);
+                                                             boolean usingTicks = ctx.getArgument("true/false (See as Ticks?)", boolean.class);
+                                                             ctx.getSource().getSender().sendMessage(Component.text(
+                                                                     "The current time for " + world.getWorld().getName() + " is " + getWorldTime(world, usingTicks) + "."
+                                                             ));
+                                                             return SINGLE_SUCCESS;
+                                                         }))
                              )
                              .then(Commands.literal("cycle")
                                    .executes(ctx -> {
@@ -113,7 +133,7 @@ public final class WorldCommand implements Command {
                                        var cycle = worldTime.getCurrentCycle();
                                        ctx.getSource().getSender().sendMessage(Component.text(
                                                "Current Cycle for " + worldTime.getWorld().getName() + "\n" + cycle +
-                                                       "Progress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100))) + "\n"
+                                                       "\nProgress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100))) + "\n"
                                            )
                                        );
                                        return SINGLE_SUCCESS;
@@ -125,8 +145,11 @@ public final class WorldCommand implements Command {
 
 
     private static @NotNull String getWorldTime(@NotNull WorldTime world) {
-        boolean displayUsingTicks = Solar.getHandler().getConfig().getBoolean("displayTimeAsTicks", false);
-        if (displayUsingTicks) {
+        return getWorldTime(world, Solar.getHandler().getConfig().getBoolean("displayTimeAsTicks", false));
+    }
+
+    private static @NotNull String getWorldTime(@NotNull WorldTime world, boolean displayAsTicks) {
+        if (displayAsTicks) {
             return String.valueOf(world.getTime());
         } else {
             return TimeUtil.getTimeInHHMM(world.getTime());

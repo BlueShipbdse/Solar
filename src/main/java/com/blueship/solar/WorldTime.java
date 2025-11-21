@@ -3,7 +3,6 @@ package com.blueship.solar;
 import com.blueship.solar.time.Clock;
 import com.blueship.solar.time.Cycle;
 import com.blueship.solar.time.Schedule;
-import com.blueship.solar.time.Schedule;
 import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +30,12 @@ public class WorldTime {
         if (!ticking) return;
         time += clock.getCurrentCycle().timePerTick();
         clock.tick();
+        updateWorldTime();
+    }
+
+    public void setTime(long time) {
+        this.time = time;
+        clock.setTime(this.time);
         updateWorldTime();
     }
 
