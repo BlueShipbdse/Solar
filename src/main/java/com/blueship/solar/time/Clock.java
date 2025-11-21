@@ -9,24 +9,25 @@ public sealed interface Clock permits ClockImpl {
         return new ClockImpl(schedule);
     }
 
-    static @NotNull Clock of(@NotNull Schedule schedule, long time) {
+    static @NotNull Clock of(@NotNull Schedule schedule, float time) {
         return new ClockImpl(schedule, time);
     }
 
     void tick();
 
-    void setTime(long time);
+    void setTime(float time);
     @NotNull Cycle getCurrentCycle();
 
     /**
      * Gets the percentage completed of a cycle.
      * @return the completed percent of the current cycle.
      */
-    double getCycleProgress();
+    float getCycleProgress();
 
     /**
      * Gets the percentage completed of the schedule.
+     *
      * @return the completed percent of the schedule.
      */
-    double getScheduleProgress();
+    float getScheduleProgress();
 }

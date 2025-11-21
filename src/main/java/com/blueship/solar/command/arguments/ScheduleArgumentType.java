@@ -35,8 +35,6 @@ public class ScheduleArgumentType implements CustomArgumentType.Converted<Schedu
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        SuggestionUtil.trimInvalids(Solar.getHandler().getScheduleNames(), builder.getRemainingLowerCase())
-                      .forEach(builder::suggest);
-        return builder.buildFuture();
+        return SuggestionUtil.suggestTrimmedValues(builder, Solar.getHandler().getScheduleNames()).buildFuture();
     }
 }

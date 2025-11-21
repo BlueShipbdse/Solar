@@ -12,7 +12,7 @@ import static com.blueship.solar.Constants.DAYLIGHT_CYCLE;
 
 final class ClockImpl implements Clock {
     private final @NotNull Schedule schedule;
-    private final long totalCycleTime;
+    private final float totalCycleTime;
     private final @NotNull Iterator<TimePoint> futureTime;
     private final @Positive int size;
     private final int maxChecks;
@@ -26,8 +26,9 @@ final class ClockImpl implements Clock {
         Collection<TimePoint> timePoints = new ArrayList<>();
         long lastTimePoint = 0;
         for (Cycle cycle : schedule.cycles()) {
-            timePoints.add(new TimePoint(cycle, lastTimePoint, lastTimePoint + DAYLIGHT_CYCLE));
-            lastTimePoint += DAYLIGHT_CYCLE;
+            float cycleTime = cycle.cycleTime() * cycle.days();
+            timePoints.add(new TimePoint(cycle, lastTimePoint, lastTimePoint + cycle.cycleTime() * cycle.days()));
+            lastTimePoint += (long) cycleTime;
         }
         if (!timePoints.isEmpty()) {
             this.totalCycleTime = lastTimePoint;
@@ -43,12 +44,12 @@ final class ClockImpl implements Clock {
         this.currentTime = futureTime.next();
     }
 
-    ClockImpl(@NotNull Schedule schedule, long time) {
+    ClockImpl(@NotNull Schedule schedule, float time) {
         this(schedule);
         fastAdvanceCycles(time);
     }
 
-    private void fastAdvanceCycles(long time) {
+    private void fastAdvanceCycles(float time) {
         this.currentCycleTime = time % totalCycleTime;
         tryAdvanceCycles();
     }
@@ -74,7 +75,7 @@ final class ClockImpl implements Clock {
     }
 
     @Override
-    public void setTime(long time) {
+    public void setTime(float time) {
         fastAdvanceCycles(time);
     }
 
@@ -84,12 +85,12 @@ final class ClockImpl implements Clock {
     }
 
     @Override
-    public double getCycleProgress() {
+    public float getCycleProgress() {
         return (currentCycleTime - currentTime.startTime) / (currentTime.endTime - currentTime.startTime);
     }
 
     @Override
-    public double getScheduleProgress() {
+    public float getScheduleProgress() {
         return currentCycleTime / totalCycleTime;
     }
 }

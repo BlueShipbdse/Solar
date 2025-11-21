@@ -180,8 +180,8 @@ public final class SolarHandler implements Listener {
         return solar.getConfig();
     }
 
-    public void createSchedule(@NotNull String name) {
-        schedules.putIfAbsent(name, Schedule.of(name, List.of()));
+    public boolean createSchedule(@NotNull String name) {
+        return schedules.putIfAbsent(name, Schedule.of(name, List.of())) == null;
     }
 
     public boolean removeSchedule(@NotNull String name) {

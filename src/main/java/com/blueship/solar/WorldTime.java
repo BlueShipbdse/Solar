@@ -14,7 +14,7 @@ public class WorldTime {
     private final boolean wasTimeStopped;
     private @NotNull Schedule schedule;
     private @NotNull Clock clock;
-    private long time;
+    private float time;
     private boolean ticking;
 
     WorldTime(@NotNull World world, @NotNull Schedule schedule) {
@@ -29,7 +29,7 @@ public class WorldTime {
 
     void tick() {
         if (!ticking) return;
-        time += (long) clock.getCurrentCycle().timePerTick();
+        time += clock.getCurrentCycle().timePerTick();
         clock.tick();
         updateWorldTime();
     }
@@ -41,7 +41,7 @@ public class WorldTime {
     }
 
     private void updateWorldTime() {
-        world.setFullTime(time);
+        world.setFullTime(getTime());
     }
 
     void onRemove() {
@@ -80,7 +80,7 @@ public class WorldTime {
     }
 
     public long getTime() {
-        return time;
+        return (long) time;
     }
 
     public @NotNull Cycle getCurrentCycle() {

@@ -33,6 +33,7 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 @SuppressWarnings("UnstableApiUsage")
 public final class ScheduleCommand implements Command {
     private static final SimpleCommandExceptionType NAME_TOO_LONG = new SimpleCommandExceptionType(new LiteralMessage("Schedule name cannot be longer than 16 characters!"));
+    private static final DynamicCommandExceptionType DUPLICATE_SCHEDULE = new DynamicCommandExceptionType(obj -> new LiteralMessage(obj + " is already a schedule."));
     private static final DynamicCommandExceptionType INVALID_SCHEDULE_NAME = new DynamicCommandExceptionType(obj -> new LiteralMessage(obj + " is not a valid schedule."));
     private static final DynamicCommandExceptionType INVALID_CYCLE_NAME = new DynamicCommandExceptionType(obj -> new LiteralMessage(obj + " is not a valid cycle."));
 
@@ -46,9 +47,12 @@ public final class ScheduleCommand implements Command {
                                        if (name.length() > 16) {
                                            throw NAME_TOO_LONG.create();
                                        }
-                                       Solar.getHandler().createSchedule(name);
-                                       ctx.getSource().getSender().sendMessage("Created schedule " + name + ".");
-                                       return SINGLE_SUCCESS;
+                                       if (Solar.getHandler().createSchedule(name)) {
+                                           ctx.getSource().getSender().sendMessage("Created schedule " + name + ".");
+                                           return SINGLE_SUCCESS;
+                                       } else {
+                                           throw DUPLICATE_SCHEDULE.create(name);
+                                       }
                                    })
                              )
                        )
@@ -58,6 +62,7 @@ public final class ScheduleCommand implements Command {
                                    .executes(ctx -> {
                                        String name = ctx.getArgument("schedule", String.class);
                                        if (Solar.getHandler().removeSchedule(name)) {
+                                           ctx.getSource().getSender().sendMessage(Component.text("Removed schedule " + name + "."));
                                            return SINGLE_SUCCESS;
                                        } else {
                                            throw INVALID_SCHEDULE_NAME.create(name);
@@ -162,7 +167,7 @@ public final class ScheduleCommand implements Command {
     }
 
     public static final int SCHEDULES_PER_PAGE = 9;
-    public static final int SCHEDULE_NAME_LENGTH = 50;
+    public static final int SCHEDULE_NAME_LENGTH = 58;
     public static final @NotNull Component TOP_TEXT_COMPONENT = Component.text("/")
                                                                           .append(createFillerText(" Schedules ", SCHEDULE_NAME_LENGTH))
                                                                           .append(Component.text("\\"))
@@ -195,7 +200,8 @@ public final class ScheduleCommand implements Command {
 
     static @NotNull Component createScheduleListPage(@NotNull Int2ObjectMap<List<Schedule>> pages, int currentPage, @NotNull BiFunction<Schedule, TextComponent, TextComponent> componentConsumer) {
         return Pages.createPage(
-                pages, currentPage, SCHEDULES_PER_PAGE, TOP_TEXT_COMPONENT, schedule -> List.of(
+                pages, currentPage, SCHEDULE_NAME_LENGTH, TOP_TEXT_COMPONENT,
+                schedule -> List.of(
                         componentConsumer.apply(schedule, Component.text(StringUtil.centerJustify(schedule.name(), SCHEDULE_NAME_LENGTH)).hoverEvent(HoverEvent.showText(createScheduleHoverText(schedule))))
                 ),
                 true

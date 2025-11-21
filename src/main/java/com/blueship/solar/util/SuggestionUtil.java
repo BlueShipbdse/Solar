@@ -16,12 +16,12 @@ public class SuggestionUtil {
     }
 
     public static @NotNull SuggestionsBuilder suggestTrimmedValues(@NotNull SuggestionsBuilder builder, @NotNull Collection<String> values) {
-        trimInvalids(values, builder.getRemainingLowerCase()).forEachOrdered(builder::suggest);
+        trimInvalids(values, builder.getRemaining()).forEachOrdered(builder::suggest);
         return builder;
     }
 
     public static <T> @NotNull SuggestionsBuilder suggestTrimmedValues(@NotNull SuggestionsBuilder builder, @NotNull Collection<T> values, @NotNull Function<T, String> serializer) {
-        trimInvalids(values, serializer, builder.getRemainingLowerCase()).forEachOrdered(builder::suggest);
+        trimInvalids(values, serializer, builder.getRemaining()).forEachOrdered(builder::suggest);
         return builder;
 
     }

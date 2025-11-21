@@ -113,8 +113,9 @@ public final class WorldCommand implements Command {
                                                                                    .append(Component.text("INACTIVE", NamedTextColor.RED))
                                                                                    .append(Component.text(") "));
     private static final int CYCLES_STATUS_LENGTH = 64;
-    private static final int WORLD_NAME_LENGTH = 76;
+    private static final int WORLD_NAME_LENGTH = 80;
     private static final int SCHEDULE_NAME_LENGTH = 58;
+    private static final int PAGE_WIDTH = CYCLES_STATUS_LENGTH + WORLD_NAME_LENGTH + SCHEDULE_NAME_LENGTH;
     private static final @NotNull Component TOP_TEXT_COMPONENT = Component.text("/")
                                                                           // Cycles
                                                                           .append(Pages.createFillerText(" Cycles ", CYCLES_STATUS_LENGTH))
@@ -132,7 +133,8 @@ public final class WorldCommand implements Command {
 
     private static @NotNull Component createWorldPage(@NotNull Int2ObjectMap<@NotNull List<WorldTime>> pages, int currentPage) {
         return Pages.createPage(
-                pages, currentPage, WORLDS_PER_PAGE, TOP_TEXT_COMPONENT, worldTime -> {
+                pages, currentPage, PAGE_WIDTH, TOP_TEXT_COMPONENT,
+                worldTime -> {
                     String worldName = worldTime.getWorld().getName();
                     Schedule schedule = worldTime.getSchedule();
                     Component cycleComponent;

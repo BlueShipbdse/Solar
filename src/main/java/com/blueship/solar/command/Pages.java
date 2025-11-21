@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
+import org.bukkit.map.MinecraftFont;
 import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,31 +28,31 @@ public final class Pages {
         return Component.text(StringUtil.centerJustify(text, length, BAR_FILLER));
     }
 
-    public static <T> @NotNull Component createPage(@NotNull Collection<T> entries, @Positive int currentPage, @Positive int pageLength,
+    public static <T> @NotNull Component createPage(@NotNull Collection<T> entries, @Positive int currentPage, int entriesPerPage, @Positive int pageWidth,
                                                     @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowTextCreator) {
-        return createPage(createPageMap(entries, pageLength), currentPage, pageLength, topText, rowTextCreator, false);
+        return createPage(createPageMap(entries, entriesPerPage), currentPage, pageWidth, topText, rowTextCreator, false);
     }
 
-    public static <T> @NotNull Component createPage(@NotNull Collection<T> entries, @Positive int currentPage, @Positive int pageLength,
+    public static <T> @NotNull Component createPage(@NotNull Collection<T> entries, @Positive int currentPage, int entriesPerPage, @Positive int pageWidth,
                                                     @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowTextCreator,
                                                     @NotNull Function<Component, Component> prevPageEffect,
                                                     @NotNull Function<Component, Component> nextPageEffect) {
-        return createPage(createPageMap(entries, pageLength), currentPage, pageLength, topText, rowTextCreator, false, prevPageEffect, nextPageEffect);
+        return createPage(createPageMap(entries, entriesPerPage), currentPage, pageWidth, topText, rowTextCreator, false, prevPageEffect, nextPageEffect);
     }
 
-    public static <T> @NotNull Component createPage(@NotNull Int2ObjectMap<List<T>> pages, @Positive int currentPage, @Positive int pageLength,
+    public static <T> @NotNull Component createPage(@NotNull Int2ObjectMap<List<T>> pages, @Positive int currentPage, @Positive int pageWidth,
                                                     @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowTextCreator, boolean numberEntries) {
         return createPage(
                 pages,
                 currentPage,
-                pageLength,
+                pageWidth,
                 topText,
                 rowTextCreator,
                 numberEntries,
                 prevPage -> prevPage.clickEvent(ClickEvent.callback(audience -> audience.sendMessage(createPage(
                         pages,
                         currentPage - 1,
-                        pageLength,
+                        pageWidth,
                         topText,
                         rowTextCreator,
                         numberEntries
@@ -59,7 +60,7 @@ public final class Pages {
                 nextPage -> nextPage.clickEvent(ClickEvent.callback(audience -> audience.sendMessage(createPage(
                         pages,
                         currentPage + 1,
-                        pageLength,
+                        pageWidth,
                         topText,
                         rowTextCreator,
                         numberEntries
@@ -67,7 +68,7 @@ public final class Pages {
         );
     }
 
-    public static <T> @NotNull Component createPage(@NotNull Int2ObjectMap<List<T>> pages, @Positive int currentPage, @Positive int pageLength,
+    public static <T> @NotNull Component createPage(@NotNull Int2ObjectMap<List<T>> pages, @Positive int currentPage, @Positive int pageWidth,
                                                     @NotNull Component topText, @NotNull Function<T, @NotNull List<Component>> rowText,
                                                     boolean numberEntries, @NotNull Function<Component, Component> prevPageEffect,
                                                     @NotNull Function<Component, Component> nextPageEffect) {
@@ -91,7 +92,7 @@ public final class Pages {
             ++currentEntry;
         }
 
-        return topText.append(middleComponent).append(Pages.createPageBottomText(pages, currentPage, pageLength, prevPageEffect, nextPageEffect));
+        return topText.append(middleComponent).append(Pages.createPageBottomText(pages, currentPage, pageWidth, prevPageEffect, nextPageEffect));
     }
 
     public static <T> @NotNull Int2ObjectMap<List<T>> createPageMap(@NotNull Collection<T> source, @Positive int entriesPerPage) {
@@ -116,7 +117,7 @@ public final class Pages {
     }
 
     private static <T> @NotNull Component createPageBottomText(@NotNull Int2ObjectMap<@NotNull List<T>> pages, @Positive int currentPage,
-                                                               @Positive int pageLength, @NotNull Function<Component, Component> prevPageEffect,
+                                                               @Positive int pageWidth, @NotNull Function<Component, Component> prevPageEffect,
                                                                @NotNull Function<Component, Component> nextPageEffect) {
         final @NotNull String currentPageString = " " + currentPage + " / " + pages.size() + " ";
         @NotNull Component prevPageComponent = Component.text(PREV_PAGE);
@@ -128,12 +129,12 @@ public final class Pages {
         if (currentPage != pages.size()) {
             nextPageComponent = nextPageEffect.apply(nextPageComponent);
         }
-        final int fillerToMake = Math.max(0, pageLength - (currentPageString.length() + PREV_PAGE.length() + NEXT_PAGE.length()));
+        final int fillerToMake = Math.max(0, (pageWidth / MinecraftFont.Font.getWidth(BAR_FILLER)) - (currentPageString.length() + PREV_PAGE.length() + NEXT_PAGE.length()));
         return Component.text(BAR_FILLER.repeat(Math.floorDiv(fillerToMake, 2))).toBuilder()
                         .append(prevPageComponent)
                         .append(Component.text(currentPageString))
                         .append(nextPageComponent)
-                        .append(Component.text(BAR_FILLER.repeat(Math.ceilDiv(fillerToMake, 2))))
+                        .append(Component.text(BAR_FILLER.repeat(Math.floorDiv(fillerToMake, 2))))
                         .build();
     }
 }
