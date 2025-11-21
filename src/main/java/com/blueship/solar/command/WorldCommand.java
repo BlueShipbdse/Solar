@@ -206,6 +206,7 @@ public final class WorldCommand implements Command {
         return Component.text("Name: " + worldTime.getWorld().getName()).appendNewline()
        .append(Component.text("Day: " + TimeUtil.toDays(worldTime.getTime())).appendNewline())
        .append(Component.text("Time: " + getWorldTime(worldTime)).appendNewline())
+       .append(Component.text("Schedule: " + worldTime.getSchedule().name())).appendNewline()
        .append(Component.text(worldTime.getCurrentCycle().toString())).appendNewline()
        .append(Component.text("Progress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100)))));
     }
