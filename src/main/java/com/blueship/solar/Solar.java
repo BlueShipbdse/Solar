@@ -1,17 +1,11 @@
 package com.blueship.solar;
 
-import com.blueship.solar.event.ScheduleChangeEvent;
-import com.blueship.solar.time.Cycle;
-import com.blueship.solar.time.Schedule;
-import com.blueship.solar.time.Schedule;
-import io.papermc.paper.event.world.WorldGameRuleChangeEvent;
+import com.blueship.solar.compatibility.Compatibility;
+import com.blueship.solar.compatibility.MultiverseCompatibility;
 
 import com.blueship.solar.compatibility.VanillaCompatibility;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -30,9 +24,10 @@ public final class Solar extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(handler, this);
 
-        Bukkit.getPluginManager().registerEvents(this, this);
-        tickTask = Bukkit.getScheduler().runTaskTimer(this, this::tick, 0L, 1L);
         compatibilities.add(new VanillaCompatibility());
+        if (Bukkit.getPluginManager().isPluginEnabled("Multiverse-Core")) {
+            compatibilities.add(new MultiverseCompatibility());
+        }
 
         compatibilities.forEach(compat -> Bukkit.getPluginManager().registerEvents(compat, this));
     }
