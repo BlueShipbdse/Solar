@@ -3,6 +3,7 @@ version: '1.0'
 prefix: "Solar"
 author: blueshipbdse
 description: "A plugin for managing world time."
+website: https://github.com/BlueShipbdse/Solar
 api-version: '1.21.4'
 main: com.blueship.solar.Solar
 bootstrapper: com.blueship.solar.Bootstrapper
