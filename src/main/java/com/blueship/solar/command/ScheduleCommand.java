@@ -5,6 +5,7 @@ import com.blueship.solar.command.arguments.ScheduleArgumentType;
 import com.blueship.solar.time.Cycle;
 import com.blueship.solar.time.Schedule;
 import com.blueship.solar.util.StringUtil;
+import com.blueship.solar.util.SuggestionUtil;
 import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -21,8 +22,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.checkerframework.checker.index.qual.Positive;
-import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -55,10 +54,7 @@ public final class ScheduleCommand implements Command {
                        )
                        .then(Commands.literal("remove")
                              .then(Commands.argument("schedule", StringArgumentType.word())
-                                   .suggests((ctx, builder) -> {
-                                       Solar.getHandler().getScheduleNames().forEach(builder::suggest);
-                                       return builder.buildFuture();
-                                   })
+                                   .suggests((ctx, builder) -> SuggestionUtil.suggestTrimmedValues(builder, Solar.getHandler().getScheduleNames()).buildFuture())
                                    .executes(ctx -> {
                                        String name = ctx.getArgument("schedule", String.class);
                                        if (Solar.getHandler().removeSchedule(name)) {
@@ -79,7 +75,7 @@ public final class ScheduleCommand implements Command {
                                                                addCycle(ctx);
                                                                return SINGLE_SUCCESS;
                                                            })
-                                                           .then(Commands.argument("days", ArgumentTypes.time())
+                                                           .then(Commands.argument("days", IntegerArgumentType.integer(1))
                                                                  .executes(ctx -> {
                                                                      addCycle(ctx);
                                                                      return SINGLE_SUCCESS;
@@ -98,8 +94,7 @@ public final class ScheduleCommand implements Command {
                                                .then(Commands.argument("cycle", StringArgumentType.word())
                                                      .suggests((ctx, builder) -> {
                                                          var schedule = ctx.getArgument("schedule", Schedule.class);
-                                                         schedule.cycles().stream().map(Cycle::name).forEachOrdered(builder::suggest);
-                                                         return builder.buildFuture();
+                                                         return SuggestionUtil.suggestTrimmedValues(builder, schedule.cycles(), Cycle::name).buildFuture();
                                                      })
                                                      .executes(ctx -> {
                                                         var cycleName = ctx.getArgument("cycle", String.class);
@@ -133,12 +128,9 @@ public final class ScheduleCommand implements Command {
 
     private static void addCycle(@NotNull CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         final var schedule = context.getArgument("schedule", Schedule.class);
-        String name;
-        int time;
-        int days;
-        int index;
-        name = context.getArgument("name", String.class);
-        time = context.getArgument("time", int.class);
+        final String name = context.getArgument("name", String.class);
+        final int time = context.getArgument("time", int.class);
+        int days, index;
         try {
             days = context.getArgument("days", int.class);
         } catch (IllegalArgumentException e) {

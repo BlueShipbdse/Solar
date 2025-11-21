@@ -2,6 +2,7 @@ package com.blueship.solar.command.arguments;
 
 import com.blueship.solar.Solar;
 import com.blueship.solar.WorldTime;
+import com.blueship.solar.util.SuggestionUtil;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -32,7 +33,8 @@ public class WorldTimeArgumentType implements CustomArgumentType.Converted<World
 
     @Override
     public <S> @NotNull CompletableFuture<Suggestions> listSuggestions(@NotNull CommandContext<S> context, SuggestionsBuilder builder) {
-        Solar.getHandler().getWorlds().forEach(worldTime -> builder.suggest(worldTime.getWorld().key().value()));
+        SuggestionUtil.trimInvalids(Solar.getHandler().getWorlds(), (worldTime -> worldTime.getWorld().key().value()), builder.getRemainingLowerCase())
+                      .forEach(builder::suggest);
         return builder.buildFuture();
 
     }

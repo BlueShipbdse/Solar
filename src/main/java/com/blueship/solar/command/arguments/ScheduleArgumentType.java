@@ -2,6 +2,7 @@ package com.blueship.solar.command.arguments;
 
 import com.blueship.solar.Solar;
 import com.blueship.solar.time.Schedule;
+import com.blueship.solar.util.SuggestionUtil;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -34,7 +35,8 @@ public class ScheduleArgumentType implements CustomArgumentType.Converted<Schedu
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        Solar.getHandler().getScheduleNames().forEach(builder::suggest);
+        SuggestionUtil.trimInvalids(Solar.getHandler().getScheduleNames(), builder.getRemainingLowerCase())
+                      .forEach(builder::suggest);
         return builder.buildFuture();
     }
 }

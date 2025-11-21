@@ -8,9 +8,51 @@ import org.jetbrains.annotations.NotNull;
  * 24000 Ticks -> 1 MC Day
  */
 public class TimeUtil {
-    private static final float TICKS_PER_HOUR = Constants.DAYLIGHT_CYCLE / 24F;
-    private static final float TICKS_PER_MINUTE = TICKS_PER_HOUR / 60F;
-    private static final float TICKS_PER_SECOND = TICKS_PER_MINUTE / 60F;
+    public static final float TICKS_PER_HOUR = Constants.DAYLIGHT_CYCLE / 24F;
+    public static final float TICKS_PER_MINUTE = TICKS_PER_HOUR / 60F;
+    public static final float TICKS_PER_SECOND = TICKS_PER_MINUTE / 60F;
+
+
+    /**
+     * Converts days to ticks.
+     *
+     * @param days the amount of days to convert to ticks
+     * @return the amount of ticks converted from days
+     */
+    public static long fromDays(long days) {
+        return days * Constants.DAYLIGHT_CYCLE;
+    }
+
+    /**
+     * Converts hours to ticks.
+     * Result is rounded down.
+     *
+     * @param hours the amount of hours to convert to ticks
+     * @return the amount of ticks converted from hours
+     */
+    public static long fromHours(long hours) {
+        return (long) (hours * TICKS_PER_HOUR);
+    }
+
+    /**
+     * Converts minutes to ticks.
+     *
+     * @param minutes the amount of minutes to convert to ticks
+     * @return the amount of ticks converted from minutes
+     */
+    public static long fromMinutes(long minutes) {
+        return (long) (minutes * TICKS_PER_MINUTE);
+    }
+
+    /**
+     * Converts seconds to ticks.
+     *
+     * @param seconds the amount of seconds to convert to ticks
+     * @return the amount of ticks converted from seconds
+     */
+    public static long fromSeconds(long seconds) {
+        return (long) (seconds * TICKS_PER_SECOND);
+    }
 
     /**
      * Gets the amount of days from an amount of ticks.
