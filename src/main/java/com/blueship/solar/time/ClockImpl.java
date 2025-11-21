@@ -6,18 +6,21 @@ import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import static com.blueship.solar.Constants.DAYLIGHT_CYCLE;
 
 final class ClockImpl implements Clock {
     private final @NotNull Schedule schedule;
-    private final float totalCycleTime;
+    private final double totalCycleTime;
     private final @NotNull Iterator<TimePoint> futureTime;
     private final @Positive int size;
     private final int maxChecks;
     private @NotNull TimePoint currentTime;
-    private float currentCycleTime = 0;
+    private double currentCycleTime = 0;
 
     private record TimePoint(@NotNull Cycle cycle, @NonNegative long startTime, @NonNegative long endTime) {}
 
@@ -26,7 +29,7 @@ final class ClockImpl implements Clock {
         Collection<TimePoint> timePoints = new ArrayList<>();
         long lastTimePoint = 0;
         for (Cycle cycle : schedule.cycles()) {
-            float cycleTime = cycle.cycleTime() * cycle.days();
+            double cycleTime = cycle.cycleTime() * cycle.days();
             timePoints.add(new TimePoint(cycle, lastTimePoint, lastTimePoint + cycle.cycleTime() * cycle.days()));
             lastTimePoint += (long) cycleTime;
         }
@@ -44,12 +47,12 @@ final class ClockImpl implements Clock {
         this.currentTime = futureTime.next();
     }
 
-    ClockImpl(@NotNull Schedule schedule, float time) {
+    ClockImpl(@NotNull Schedule schedule, double time) {
         this(schedule);
         fastAdvanceCycles(time);
     }
 
-    private void fastAdvanceCycles(float time) {
+    private void fastAdvanceCycles(double time) {
         this.currentCycleTime = time % totalCycleTime;
         tryAdvanceCycles();
     }
@@ -75,7 +78,7 @@ final class ClockImpl implements Clock {
     }
 
     @Override
-    public void setTime(float time) {
+    public void setTime(double time) {
         fastAdvanceCycles(time);
     }
 
@@ -85,12 +88,12 @@ final class ClockImpl implements Clock {
     }
 
     @Override
-    public float getCycleProgress() {
+    public double getCycleProgress() {
         return (currentCycleTime - currentTime.startTime) / (currentTime.endTime - currentTime.startTime);
     }
 
     @Override
-    public float getScheduleProgress() {
+    public double getScheduleProgress() {
         return currentCycleTime / totalCycleTime;
     }
 }

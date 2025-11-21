@@ -12,13 +12,13 @@ public final class Cycle {
     private final @NotNull String name;
     private final @Positive int days;
     private final @Positive long cycleTime;
-    private final @Positive float timePerTick;
+    private final @Positive double timePerTick;
 
     public Cycle(@NotNull String name, @Positive long cycleTime, int days) {
         this.name = name;
         this.days = days;
         this.cycleTime = cycleTime;
-        this.timePerTick = (float) Constants.DAYLIGHT_CYCLE / cycleTime;
+        this.timePerTick = (double) Constants.DAYLIGHT_CYCLE / cycleTime;
     }
 
     public @NotNull String name() {
@@ -29,7 +29,7 @@ public final class Cycle {
         return cycleTime;
     }
 
-    public float timePerTick() {
+    public double timePerTick() {
         return timePerTick;
     }
 

@@ -13,7 +13,7 @@ public class WorldTime {
     private final boolean wasTimeStopped;
     private @NotNull Schedule schedule;
     private @NotNull Clock clock;
-    private float time;
+    private double time;
     private boolean ticking;
 
     WorldTime(@NotNull World world, @NotNull Schedule schedule) {
@@ -35,13 +35,13 @@ public class WorldTime {
 
     public void setTime(long time) {
         this.time = time;
-        clock.setTime(this.time);
+        clock.setTime( this.time);
         updateWorldTime();
     }
 
     public void addTime(long time) {
         this.time += time;
-        clock.setTime(this.time);
+        clock.setTime( this.time);
         updateWorldTime();
     }
 
@@ -56,7 +56,7 @@ public class WorldTime {
     }
 
     void onScheduleUpdate() {
-        this.clock = Clock.of(schedule, time);
+        this.clock = Clock.of(schedule,  time);
     }
 
     public void setTicking(boolean ticking) {
@@ -65,7 +65,7 @@ public class WorldTime {
 
     public void setSchedule(@NotNull Schedule schedule) {
         this.schedule = schedule;
-        this.clock = Clock.of(schedule, time);
+        this.clock = Clock.of(schedule,  time);
     }
 
     public @NotNull Schedule getSchedule() {
