@@ -77,7 +77,16 @@ public final class SolarHandler implements Listener {
             List<Cycle> cycleList = new ArrayList<>();
             if (cycleSection != null) {
                 for (var cycleName : cycleSection.getKeys(false)) {
-                    long time = cycleSection.getLong(cycleName);
+                    var section = cycleSection.getConfigurationSection(cycleName);
+                    if (section == null) {
+                        long backupTime = cycleSection.getLong(cycleName, 0L);
+                        if (backupTime != 0) {
+                            cycleList.add(new Cycle(cycleName, backupTime, 1));
+                        }
+                        continue;
+                    }
+                    int days = section.getInt("days", 1);
+                    long time = section.getLong("time", 0);
                     if (time <= 0) {
                         getLogger().warn(
                                 "Failed to read schedules.yml. Cycle {} for defined Schedule {} is not valid! Time must be greater than 0.",
@@ -85,7 +94,7 @@ public final class SolarHandler implements Listener {
                                 scheduleName
                         );
                     }
-                    cycleList.add(new Cycle(cycleName, time));
+                    cycleList.add(new Cycle(cycleName, time, days));
                 }
             }
             schedules.put(scheduleName, Schedule.of(scheduleName, cycleList));

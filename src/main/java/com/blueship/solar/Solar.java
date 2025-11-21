@@ -14,7 +14,7 @@ public final class Solar extends JavaPlugin {
     public static SolarHandler getHandler() {
         return handler;
     }
-    private Set<Compatibility> compatibilities = new HashSet<>();
+    private final Set<Compatibility> compatibilities = new HashSet<>();
 
     @Override
     public void onEnable() {

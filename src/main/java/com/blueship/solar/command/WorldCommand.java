@@ -174,10 +174,10 @@ public final class WorldCommand implements Command {
     }
 
     private static @NotNull Component createWorldTimeDescription(@NotNull WorldTime worldTime) {
-        return Component.text("Name: " + worldTime.getWorld().getName())
+        return Component.text("Name: " + worldTime.getWorld().getName()).appendNewline()
        .append(Component.text("Day: " + TimeUtil.toDays(worldTime.getTime())).appendNewline())
        .append(Component.text("Time: " + getWorldTime(worldTime)).appendNewline())
-       .append(Component.text(worldTime.getCurrentCycle().toString())).appendNewline()
+       .append(Component.text("Cycle: " + worldTime.getCurrentCycle())).appendNewline()
        .append(Component.text("Progress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100)))));
     }
 }

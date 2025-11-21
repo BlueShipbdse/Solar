@@ -7,15 +7,16 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 public final class Cycle {
-    public static final Cycle DEFAULT = new Cycle("Default", Constants.DAYLIGHT_CYCLE);
+    public static final Cycle DEFAULT = new Cycle("Default", Constants.DAYLIGHT_CYCLE, 1);
 
     private final @NotNull String name;
-    private final @Positive int days = 1;
+    private final @Positive int days;
     private final @Positive long cycleTime;
     private final @Positive float timePerTick;
 
-    public Cycle(@NotNull String name, @Positive long cycleTime) {
+    public Cycle(@NotNull String name, @Positive long cycleTime, int days) {
         this.name = name;
+        this.days = days;
         this.cycleTime = cycleTime;
         this.timePerTick = (float) Constants.DAYLIGHT_CYCLE / cycleTime;
     }
@@ -32,9 +33,13 @@ public final class Cycle {
         return timePerTick;
     }
 
+    public int days() {
+        return days;
+    }
+
     @Override
     public @NotNull String toString() {
-        return "Name: " + name + "\nTime: " + cycleTime;
+        return "Cycle: \n  Name: " + name + "\n  Time: " + cycleTime + "\n  Days: " + days;
     }
 
     @Override

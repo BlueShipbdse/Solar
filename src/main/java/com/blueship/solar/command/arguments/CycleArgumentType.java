@@ -30,7 +30,9 @@ public class CycleArgumentType implements CustomArgumentType<@NotNull Cycle, Str
         String cycleName = reader.readString();
         reader.skipWhitespace();
         long cycleDuration = reader.readLong();
-        return new Cycle(cycleName, cycleDuration);
+        reader.skipWhitespace();
+        int days = reader.readInt();
+        return new Cycle(cycleName, cycleDuration, days);
     }
 
     @Override

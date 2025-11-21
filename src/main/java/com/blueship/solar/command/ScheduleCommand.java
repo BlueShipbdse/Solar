@@ -7,20 +7,22 @@ import com.blueship.solar.time.Schedule;
 import com.blueship.solar.util.StringUtil;
 import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.tree.CommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.checkerframework.checker.index.qual.Positive;
+import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -72,31 +74,24 @@ public final class ScheduleCommand implements Command {
                                    .then(Commands.literal("cycle")
                                          .then(Commands.literal("add")
                                                .then(Commands.argument("name", StringArgumentType.word())
-                                                     .then(Commands.argument("time", LongArgumentType.longArg(1))
-                                                          .executes(ctx -> {
-                                                              var cycle = new Cycle(ctx.getArgument("name", String.class), ctx.getArgument("time", long.class));
-                                                              var schedule = ctx.getArgument("schedule", Schedule.class);
-                                                              schedule.addCycle(cycle);
-                                                              return SINGLE_SUCCESS;
-                                                          })
-                                                          .then(Commands.argument("index", IntegerArgumentType.integer(0))
-                                                                .executes(ctx -> {
-                                                                    var cycle = new Cycle(ctx.getArgument("name", String.class), ctx.getArgument("time", long.class));
-                                                                    var schedule = ctx.getArgument("schedule", Schedule.class);
-                                                                    int index = ctx.getArgument("index", int.class);
-                                                                    int cycleSize = schedule.cycles().size();
-                                                                    if (index > cycleSize) {
-                                                                        throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.integerTooHigh().create(index, cycleSize);
-                                                                    }
-                                                                    if (index == cycleSize) {
-                                                                        schedule.addCycle(cycle);
-                                                                    } else {
-                                                                        schedule.addCycle(cycle, index);
-                                                                    }
-                                                                    return SINGLE_SUCCESS;
-                                                                })
-                                                          )
-                                                    )
+                                                     .then(Commands.argument("time", ArgumentTypes.time())
+                                                           .executes(ctx -> {
+                                                               addCycle(ctx);
+                                                               return SINGLE_SUCCESS;
+                                                           })
+                                                           .then(Commands.argument("days", ArgumentTypes.time())
+                                                                 .executes(ctx -> {
+                                                                     addCycle(ctx);
+                                                                     return SINGLE_SUCCESS;
+                                                                 })
+                                                                 .then(Commands.argument("index", IntegerArgumentType.integer(0))
+                                                                       .executes(ctx -> {
+                                                                           addCycle(ctx);
+                                                                           return SINGLE_SUCCESS;
+                                                                       })
+                                                                 )
+                                                           )
+                                                     )
                                                )
                                          )
                                          .then(Commands.literal("remove")
@@ -110,6 +105,7 @@ public final class ScheduleCommand implements Command {
                                                         var cycleName = ctx.getArgument("cycle", String.class);
                                                         var schedule = ctx.getArgument("schedule", Schedule.class);
                                                         if (schedule.removeCycle(cycleName)) {
+                                                           ctx.getSource().getSender().sendMessage(Component.text("Successfully removed " + cycleName + " from " + schedule.name() + "."));
                                                            return SINGLE_SUCCESS;
                                                        } else {
                                                            throw INVALID_CYCLE_NAME.create(cycleName);
@@ -135,6 +131,44 @@ public final class ScheduleCommand implements Command {
                        .build();
     }
 
+    private static void addCycle(@NotNull CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        final var schedule = context.getArgument("schedule", Schedule.class);
+        String name;
+        int time;
+        int days;
+        int index;
+        name = context.getArgument("name", String.class);
+        time = context.getArgument("time", int.class);
+        try {
+            days = context.getArgument("days", int.class);
+        } catch (IllegalArgumentException e) {
+            days = 1;
+        }
+        try {
+            index = context.getArgument("index", int.class);
+        } catch (IllegalArgumentException e) {
+            index = -1;
+        }
+
+        if (index == -1) {
+            schedule.addCycle(new Cycle(name, time, days));
+        } else {
+            final int scheduleSize = schedule.cycles().size();
+
+            if (index > scheduleSize) {
+                throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.integerTooHigh().create(index, scheduleSize);
+            }
+
+            if (index < -1) {
+                throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.integerTooLow().create(index, -1);
+
+            }
+
+            schedule.addCycle(new Cycle(name, time, days), index);
+        }
+        context.getSource().getSender().sendMessage(Component.text("Successfully added " + name + " to " + schedule.name() + "."));
+    }
+
     public static final int SCHEDULES_PER_PAGE = 9;
     public static final int SCHEDULE_NAME_LENGTH = 50;
     public static final @NotNull Component TOP_TEXT_COMPONENT = Component.text("/")
@@ -153,7 +187,7 @@ public final class ScheduleCommand implements Command {
             builder.appendNewline();
             for (var cycleIter = cycles.iterator(); cycleIter.hasNext();) {
                 var cycle = cycleIter.next();
-                builder.append(Component.text(" - ")).append(Component.text(cycle.name())).append(Component.text(" : ")).append(Component.text(cycle.cycleTime()));
+                builder.append(Component.text(" - ")).append(Component.text(cycle.name())).append(Component.text(" : ")).append(Component.text(cycle.cycleTime())).append(Component.text("t, ").append(Component.text(cycle.days() + "d")));
                 if (cycleIter.hasNext()) {
                     builder.appendNewline();
                 }
