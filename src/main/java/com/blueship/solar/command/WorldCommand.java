@@ -121,7 +121,7 @@ public final class WorldCommand implements Command {
 
 
     private static @NotNull String getWorldTime(@NotNull WorldTime world) {
-        boolean displayUsingTicks = Solar.getHandler().getConfig().getBoolean("displayTimeAsTicks", true);
+        boolean displayUsingTicks = Solar.getHandler().getConfig().getBoolean("displayTimeAsTicks", false);
         if (displayUsingTicks) {
             return String.valueOf(world.getTime());
         } else {
@@ -202,7 +202,7 @@ public final class WorldCommand implements Command {
         return Component.text("Name: " + worldTime.getWorld().getName()).appendNewline()
        .append(Component.text("Day: " + TimeUtil.toDays(worldTime.getTime())).appendNewline())
        .append(Component.text("Time: " + getWorldTime(worldTime)).appendNewline())
-       .append(Component.text("Cycle: " + worldTime.getCurrentCycle())).appendNewline()
+       .append(Component.text(worldTime.getCurrentCycle().toString())).appendNewline()
        .append(Component.text("Progress: " + ((String.format(("%." + 0 + "f%%"), worldTime.getCycleProgress() * 100)))));
     }
 }
