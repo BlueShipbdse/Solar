@@ -86,7 +86,7 @@ public final class Pages {
                     rowComponent.append(SEPERATOR_COMPONENT);
                 }
             }
-            middleComponent.append(rowComponent).append(SIDE_SEPERATOR_COMPONENT).appendNewline();middleComponent.append(rowComponent).append(SIDE_SEPERATOR_COMPONENT).appendNewline();
+            middleComponent.append(rowComponent).append(SIDE_SEPERATOR_COMPONENT).appendNewline();
 
             ++currentEntry;
         }
