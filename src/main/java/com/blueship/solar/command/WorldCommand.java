@@ -8,8 +8,10 @@ import com.blueship.solar.time.Schedule;
 import com.blueship.solar.util.AudienceUtil;
 import com.blueship.solar.util.StringUtil;
 import com.blueship.solar.util.TimeUtil;
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.tree.CommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -19,6 +21,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -27,6 +30,7 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
 public final class WorldCommand implements Command {
     private static final int WORLDS_PER_PAGE = 9;
+    private static final SimpleCommandExceptionType LOCATION_REQUIREMENT = new SimpleCommandExceptionType(new LiteralMessage("Command must have a location!"));
 
     @SuppressWarnings("UnstableApiUsage")
     @Override
@@ -40,6 +44,27 @@ public final class WorldCommand implements Command {
                              .then(Commands.argument("pages", IntegerArgumentType.integer())
                                    .executes(ctx -> {
                                        ctx.getSource().getSender().sendMessage(createWorldPage(IntegerArgumentType.getInteger(ctx, "pages")));
+                                       return SINGLE_SUCCESS;
+                                   })
+                             )
+                       )
+                       .then(Commands.literal("toggle-active")
+                             .executes(ctx -> {
+                                 var location = ctx.getSource().getLocation();
+                                 var worldTime = Solar.getHandler()
+                                                      .getWorld(location.getWorld().getName())
+                                                      .orElseThrow(() -> WorldTimeArgumentType.INVALID_WORLD.create(location.getWorld().getName()));
+                                 worldTime.setTicking(!worldTime.isTicking());
+                                 ctx.getSource().getSender().sendMessage(Component.text(worldTime.getWorld().getName() + " is now ",
+                                                                                        Style.style(NamedTextColor.YELLOW)).append(worldTime.isTicking() ? Component.text("ACTIVE", NamedTextColor.GREEN) : Component.text("INACTIVE", NamedTextColor.RED)).append(Component.text(".")));
+                                 return SINGLE_SUCCESS;
+                             })
+                             .then(Commands.argument("World", WorldTimeArgumentType.worldTime())
+                                   .executes(ctx -> {
+                                       var worldTime = ctx.getArgument("World", WorldTime.class);
+                                       worldTime.setTicking(!worldTime.isTicking());
+                                       ctx.getSource().getSender().sendMessage(Component.text(worldTime.getWorld().getName() + " is now ",
+                                                                                              Style.style(NamedTextColor.YELLOW)).append(worldTime.isTicking() ? Component.text("ACTIVE", NamedTextColor.GREEN) : Component.text("INACTIVE", NamedTextColor.RED)).append(Component.text(".")));
                                        return SINGLE_SUCCESS;
                                    })
                              )
@@ -60,12 +85,10 @@ public final class WorldCommand implements Command {
                                    .then(Commands.literal("ticking")
                                          .then(Commands.argument("true/false", BoolArgumentType.bool())
                                                .executes(ctx -> {
-                                                   var world = ctx.getArgument("World", WorldTime.class);
+                                                   var worldTime = ctx.getArgument("World", WorldTime.class);
                                                    boolean isTicking = ctx.getArgument("true/false", boolean.class);
-                                                   world.setTicking(isTicking);
-                                                   ctx.getSource().getSender().sendMessage(Component.text(
-                                                           world.getWorld().getName() + " is " + (isTicking ? " now " : " no longer " ) + "ticking.")
-                                                   );
+                                                   worldTime.setTicking(isTicking);
+                                                   ctx.getSource().getSender().sendMessage(Component.text(worldTime.getWorld().getName() + " is now ", Style.style(NamedTextColor.YELLOW)).append(worldTime.isTicking() ? Component.text("ACTIVE", NamedTextColor.GREEN) : Component.text("INACTIVE", NamedTextColor.RED)).append(Component.text(".")));
                                                    return SINGLE_SUCCESS;
                                                })
                                          )
