@@ -3,9 +3,7 @@ package com.blueship.solar;
 import com.blueship.solar.event.ScheduleChangeEvent;
 import com.blueship.solar.time.Cycle;
 import com.blueship.solar.time.Schedule;
-import io.papermc.paper.event.world.WorldGameRuleChangeEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -148,7 +146,9 @@ public final class SolarHandler implements Listener {
 
             var cycleSection = scheduleSection.createSection("cycles");
             for (var cycle : schedule.cycles()) {
-                cycleSection.set(cycle.name(), cycle.cycleTime());
+                var section = cycleSection.createSection(cycle.name());
+                section.set("time", cycle.cycleTime());
+                section.set("days", cycle.days());
             }
         }
 
